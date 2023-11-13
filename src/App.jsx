@@ -24,7 +24,7 @@ const friendsList = [{
 function App() {
 
   const [friends, setFriends] = useState(friendsList)
-  const [friendID, setFriendID] = useState(null)
+  const [friend, setFriend] = useState(null)
 
   function addFriend(name, image) {
     const newFriend = {
@@ -37,26 +37,51 @@ function App() {
     setFriends(newFriends)
   }
 
+  function selectFriend(id) {
+    if (friend?.id === id) {
+      setFriend(null)
+      return
+    }
+    setFriend(friends.find(item => item.id === id))
+  }
+
+  function setFriendBalance(value) {
+    setFriends(friends.map(person =>
+      person.id === friend.id
+        ? { ...person, balance: person.balance + value }
+        : person
+    ));
+  }
+
   return (
     <div className='app'>
       <div className='sidebar'>
-        <FriendList friends={friends} friendSelect={setFriendID} />
+        <FriendList
+          friends={friends}
+          friendSelect={selectFriend}
+          friendSelected={friend}
+        />
         <AddFriend addFriend={addFriend} />
-        <SplitList />
       </div>
+      {friend ? <SplitList friend={friend} setFriendBalance={setFriendBalance} /> : null}
     </div>
   )
 }
 
-function FriendList({ friends, friendSelect }) {
+function FriendList({ friends, friendSelected, friendSelect }) {
   return <>
     <ul>
-      {friends.map(friend => <Friend key={friend.id} friend={friend} friendSelect={friendSelect} />)}
+      {friends.map(friend => <Friend
+        key={friend.id}
+        friend={friend}
+        friendSelected={friendSelected}
+        friendSelect={friendSelect}
+      />)}
     </ul>
   </>
 }
 
-function Friend({ friend, friendSelect }) {
+function Friend({ friend, friendSelected, friendSelect }) {
 
   const text = (friend.balance > 0) ?
     `You owe ${friend.name} ${friend.balance} Euro` :
@@ -71,7 +96,11 @@ function Friend({ friend, friendSelect }) {
       <img src={friend.image} />
       <h3>{friend.name}</h3>
       <p className={textColor}>{text}</p>
-      <input type="button" value="Select" onClick={() => friendSelect(friend.id)} className='button' />
+      <input
+        type="button"
+        value={friendSelected?.id === friend.id ? 'Close' : 'Select'}
+        onClick={() => friendSelect(friend.id)}
+        className='button' />
     </li>
   </>
 }
@@ -96,10 +125,44 @@ function AddFriend({ addFriend }) {
   </>
 }
 
-function SplitList() {
-  return <>
-    <form className='form-split-bill'>
+function SplitList({ friend, setFriendBalance }) {
 
+  const [bill, setBill] = useState('')
+  const [expense, setExpense] = useState('')
+  const [payer, setPayer] = useState('you')
+
+  function handleBalance(evt) {
+    evt.preventDefault()
+    if (bill !== "" && expense !== "") {
+      const value = payer === 'friend' ? expense : -(bill - expense)
+      setFriendBalance(value)
+      setBill('')
+      setExpense('')
+    }
+  }
+
+  function handleValue(evt) {
+    const value = parseInt(evt.target.value);
+    if (!isNaN(value)) return value
+    return ""
+  }
+
+
+  return <>
+    <form className='form-split-bill' onSubmit={evt => handleBalance(evt)}>
+      <h2>Split a bill with {friend.name}</h2>
+      <h3><label htmlFor='bill'>💰 Bill value</label></h3>
+      <input type="text" id="bill" value={bill} onChange={evt => setBill(handleValue(evt))}></input>
+      <h3><label htmlFor='expense'>🚶‍♂️ Your expense</label></h3>
+      <input type="text" id="expense" value={expense} onChange={evt => setExpense(handleValue(evt))}></input>
+      <h3><label htmlFor='expense'>👩🏻‍🤝‍🧑🏼 {friend.name}`s expense</label></h3>
+      <input type="text" id="expense" disabled value={(bill !== "" && expense !== "") ? bill - expense : ''} />
+      <h3><label htmlFor='payer'>🤑 Who is paying the bill</label></h3>
+      <select name="payer" id="payer" value={payer} onChange={evt => setPayer(evt.target.value)}>
+        <option value="you">You</option>
+        <option value="friend">{friend.name}</option>
+      </select>
+      <input type="submit" value="Split bill" className='button' />
     </form>
   </>
 }
