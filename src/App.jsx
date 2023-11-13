@@ -24,6 +24,7 @@ const friendsList = [{
 function App() {
 
   const [friends, setFriends] = useState(friendsList)
+  const [friendID, setFriendID] = useState(null)
 
   function addFriend(name, image) {
     const newFriend = {
@@ -39,7 +40,7 @@ function App() {
   return (
     <div className='app'>
       <div className='sidebar'>
-        <FriendList friends={friends} />
+        <FriendList friends={friends} friendSelect={setFriendID} />
         <AddFriend addFriend={addFriend} />
         <SplitList />
       </div>
@@ -47,15 +48,15 @@ function App() {
   )
 }
 
-function FriendList({ friends }) {
+function FriendList({ friends, friendSelect }) {
   return <>
     <ul>
-      {friends.map(friend => <Friend key={friend.id} friend={friend} />)}
+      {friends.map(friend => <Friend key={friend.id} friend={friend} friendSelect={friendSelect} />)}
     </ul>
   </>
 }
 
-function Friend({ friend }) {
+function Friend({ friend, friendSelect }) {
 
   const text = (friend.balance > 0) ?
     `You owe ${friend.name} ${friend.balance} Euro` :
@@ -70,6 +71,7 @@ function Friend({ friend }) {
       <img src={friend.image} />
       <h3>{friend.name}</h3>
       <p className={textColor}>{text}</p>
+      <input type="button" value="Select" onClick={() => friendSelect(friend.id)} className='button' />
     </li>
   </>
 }
@@ -93,8 +95,13 @@ function AddFriend({ addFriend }) {
     </form>
   </>
 }
+
 function SplitList() {
-  return <></>
+  return <>
+    <form className='form-split-bill'>
+
+    </form>
+  </>
 }
 
 export default App
