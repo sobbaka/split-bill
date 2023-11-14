@@ -9,5 +9,8 @@ export default defineConfig({
       usePolling: true
     }
   },
+  build: {
+    outDir: 'docs',
+  },
   plugins: [react()],
 })
